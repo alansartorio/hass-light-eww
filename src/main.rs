@@ -1,5 +1,3 @@
-#![feature(async_closure)]
-
 use lazy_static::lazy_static;
 use std::{env::var, fs, path::Path, sync::Arc};
 use tokio::{
@@ -26,14 +24,16 @@ mod widget_state;
 lazy_static! {
     static ref TOKEN: String =
         var("HASS_TOKEN").expect("please set up the HASS_TOKEN env variable before running this");
+    static ref HOST: String =
+        var("HASS_HOST").expect("please set up the HASS_HOST env variable before running this");
 }
 
 static OUTPUT_SOCKET_PATH: &str = "/tmp/hass-light-eww-output.sock";
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let client = HassClient::new("http://192.168.0.150".to_owned(), 8123, TOKEN.to_owned());
-    let mut lamp = Lamp::new(client, "light.alan_s_bedroom_light".to_owned());
+    let client = HassClient::new(HOST.parse()?, TOKEN.to_owned());
+    let mut lamp = Lamp::new(client, "light.bedroom_light".to_owned());
     let lamp_simulator = Arc::new(tokio::sync::Mutex::new(lamp.get_state().await));
 
     let widget_state = Arc::new(tokio::sync::Mutex::new(

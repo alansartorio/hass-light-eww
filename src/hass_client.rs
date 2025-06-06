@@ -1,30 +1,27 @@
 use reqwest::{Client, Result};
 use serde_json::Value;
+use url::Url;
 
 pub struct HassClient {
-    host: String,
-    port: usize,
+    uri: Url,
     token: String,
     http_client: Client,
 }
 
 impl HassClient {
-    pub fn new(host: String, port: usize, token: String) -> Self {
+    pub fn new(uri: Url, token: String) -> Self {
         Self {
-            host,
-            port,
+            uri,
             token,
             http_client: Client::new(),
         }
     }
 
     pub async fn get_state(&self, entity_id: &str) -> Result<Value> {
-        let HassClient {
-            host, port, token, ..
-        } = self;
+        let HassClient { uri, token, .. } = self;
 
         self.http_client
-            .get(format!("{host}:{port}/api/states/{entity_id}"))
+            .get(uri.join(&format!("/api/states/{entity_id}")).unwrap())
             .header("Authorization", format!("Bearer {token}"))
             .send()
             .await?
@@ -34,12 +31,13 @@ impl HassClient {
     }
 
     pub async fn set_state(&self, domain: &str, service: &str, value: Value) -> Result<Value> {
-        let HassClient {
-            host, port, token, ..
-        } = self;
+        let HassClient { uri, token, .. } = self;
 
         self.http_client
-            .post(format!("{host}:{port}/api/services/{domain}/{service}"))
+            .post(
+                uri.join(&format!("/api/services/{domain}/{service}"))
+                    .unwrap(),
+            )
             .json(&value)
             .header("Authorization", format!("Bearer {token}"))
             .send()
