@@ -9,6 +9,7 @@ use tokio::{
     io::{stdin, AsyncBufReadExt, AsyncWriteExt, BufReader},
     net::UnixListener,
     sync::Mutex,
+    time::sleep,
 };
 use tokio_stream::{wrappers::UnixListenerStream, StreamExt};
 use tracing_subscriber::EnvFilter;
@@ -129,8 +130,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             if lamp_simulator.status == LampStatus::On
                 && (lamp_simulator.brightness.is_none() || lamp_simulator.brightness.is_none())
             {
+                loop {
+                    *lamp_simulator = lamp.get_state().await;
+                    if lamp_simulator.status == LampStatus::On {
+                        break;
+                    }
+                    sleep(Duration::from_secs_f32(0.1)).await;
+                }
                 print_widget_data(*widget_state, *lamp_simulator).await;
-                *lamp_simulator = lamp.get_state().await;
             }
         }
     })
