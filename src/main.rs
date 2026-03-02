@@ -1,5 +1,10 @@
-use lazy_static::lazy_static;
-use std::{env::var, fs, path::Path, sync::Arc};
+use std::{
+    env::var,
+    fs,
+    path::Path,
+    sync::{Arc, LazyLock},
+    time::Duration,
+};
 use tokio::{
     io::{stdin, AsyncBufReadExt, AsyncWriteExt, BufReader},
     net::UnixListener,
@@ -22,12 +27,12 @@ mod lamp;
 mod lamp_simulator;
 mod widget_state;
 
-lazy_static! {
-    static ref TOKEN: String =
-        var("HASS_TOKEN").expect("please set up the HASS_TOKEN env variable before running this");
-    static ref HOST: String =
-        var("HASS_HOST").expect("please set up the HASS_HOST env variable before running this");
-}
+static TOKEN: LazyLock<String> = LazyLock::new(|| {
+    var("HASS_TOKEN").expect("please set up the HASS_TOKEN env variable before running this")
+});
+static HOST: LazyLock<String> = LazyLock::new(|| {
+    var("HASS_HOST").expect("please set up the HASS_HOST env variable before running this")
+});
 
 static OUTPUT_SOCKET_PATH: &str = "/tmp/hass-light-eww-output.sock";
 
