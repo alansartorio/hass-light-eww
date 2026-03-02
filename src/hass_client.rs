@@ -2,6 +2,7 @@ use reqwest::{Client, Result};
 use serde_json::Value;
 use url::Url;
 
+#[derive(Debug)]
 pub struct HassClient {
     uri: Url,
     token: String,

@@ -5,12 +5,13 @@ use crate::{
     lamp_simulator::{LampState, LampStatus, Range},
 };
 
+#[derive(Debug)]
 pub struct Lamp {
     client: HassClient,
     entity_id: String,
 }
 
-#[derive(Clone, Copy, Serialize)]
+#[derive(Debug, Clone, Copy, Serialize)]
 #[serde(into = "LampCommandData")]
 pub enum LampCommand {
     On,
@@ -69,7 +70,9 @@ impl Lamp {
         Self { client, entity_id }
     }
 
+    #[tracing::instrument]
     pub async fn send_command(&mut self, command: LampCommand) {
+        tracing::info!("sending command to lamp");
         self.client
             .set_state(
                 "light",
@@ -91,7 +94,9 @@ impl Lamp {
     }
 
     pub async fn get_state(&self) -> LampState {
+        tracing::info!("obtaining state from lamp");
         let data = self.client.get_state(&self.entity_id).await.unwrap();
+        tracing::debug!(data = serde_json::to_string(&data).unwrap(), "got state from lamp");
         let attributes = &data["attributes"];
         let min_temp = attributes["min_mireds"].as_f64().unwrap() as f32;
         let max_temp = attributes["max_mireds"].as_f64().unwrap() as f32;

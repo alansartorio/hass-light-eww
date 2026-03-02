@@ -6,6 +6,7 @@ use tokio::{
     sync::Mutex,
 };
 use tokio_stream::{wrappers::UnixListenerStream, StreamExt};
+use tracing_subscriber::EnvFilter;
 
 use crate::{
     hass_client::HassClient,
@@ -32,6 +33,11 @@ static OUTPUT_SOCKET_PATH: &str = "/tmp/hass-light-eww-output.sock";
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
+    tracing_subscriber::fmt().with_env_filter(filter).init();
+
+    tracing::info!("starting");
+
     let client = HassClient::new(HOST.parse()?, TOKEN.to_owned());
     let mut lamp = Lamp::new(client, "light.bedroom_light".to_owned());
     let lamp_simulator = Arc::new(tokio::sync::Mutex::new(lamp.get_state().await));
