@@ -69,6 +69,8 @@
               with pkgs;
               [
                 cargo
+                rustc
+                rust-analyzer
                 pkg-config
               ]
               ++ buildDependencies;
